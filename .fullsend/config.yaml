@@ -30,6 +30,8 @@ agents:
       source: https://raw.githubusercontent.com/halfsend-09/url-harness-host/main/harness/bad-hash.yaml#sha256=0000000000000000000000000000000000000000000000000000000000000000
     - name: good-allowed
       source: harness/good-allowed.yaml
+    - name: no-allow
+      source: https://raw.githubusercontent.com/halfsend-09/url-harness-host/main/harness/no-allow.yaml#sha256=964a26daa483d497a126bd2c86b0f3008ea24e2236be9b881a72f66e8dc37821
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
