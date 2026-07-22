@@ -1,6 +1,1 @@
-ops:
-    - description: Prove fallback execution
-      op: write_fixture
-      args: output/dispatch-fallback-ok.json, fixtures/dispatch/ok.json
-      content: |
-        {"status":"ok","source":"harness-dispatch-behaviour-test"}
+ops: []
