@@ -1,6 +1,1 @@
-ops:
-    - description: Prove local execution
-      op: write_fixture
-      args: output/dispatch-local-ok.json, fixtures/dispatch/ok.json
-      content: |
-        {"status":"ok","source":"harness-dispatch-behaviour-test"}
+ops: []
