@@ -28,6 +28,8 @@ agents:
       source: harness/good-local.yaml
     - name: bad-hash
       source: https://raw.githubusercontent.com/halfsend-09/url-harness-host/main/harness/bad-hash.yaml#sha256=0000000000000000000000000000000000000000000000000000000000000000
+    - name: good-allowed
+      source: harness/good-allowed.yaml
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
