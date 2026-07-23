@@ -157,6 +157,79 @@ run_precommit_retry_test "precommit-passes-with-unstaged" \
 run_precommit_retry_test "precommit-retry-passes-but-left-unstaged" \
   "1" "yes" "0" "blocked:retry-left-unstaged" "yes"
 
+# ---------------------------------------------------------------------------
+# Test helper — reimplements the label re-trigger logic from post-fix.sh
+# section 5 (#5188), exercising the actual remove-then-add call sequence
+# against a stubbed `gh` so failures in either call are tolerated exactly as
+# post-fix.sh tolerates them: a failed --remove-label is always silent (the
+# label may not have existed), a failed --add-label warns but must never
+# make the script exit nonzero — a re-dispatch miss is not worth failing an
+# otherwise-successful fix push over.
+# ---------------------------------------------------------------------------
+perform_relabel_retrigger() {
+  local pr_number="$1" repo="$2"
+  gh pr edit "${pr_number}" --repo "${repo}" \
+    --remove-label "ready-for-review" 2>/dev/null || true
+  gh pr edit "${pr_number}" --repo "${repo}" \
+    --add-label "ready-for-review" 2>/dev/null || \
+    echo "::warning::Failed to re-apply ready-for-review label to PR #${pr_number} — review will not be re-dispatched"
+}
+
+run_relabel_test() {
+  local test_name="$1" fail_call="$2" expect_warning="$3"
+
+  # Stub gh: fail whichever call fail_call names, succeed otherwise.
+  gh() {
+    if [[ "$*" == *"--remove-label"* ]]; then
+      [[ "${fail_call}" == "remove" || "${fail_call}" == "both" ]] && return 1
+      return 0
+    elif [[ "$*" == *"--add-label"* ]]; then
+      [[ "${fail_call}" == "add" || "${fail_call}" == "both" ]] && return 1
+      return 0
+    fi
+    return 0
+  }
+
+  local output rc
+  output="$(perform_relabel_retrigger "123" "org/repo")"
+  rc=$?
+  unset -f gh
+
+  if [ "${rc}" -ne 0 ]; then
+    echo "FAIL: ${test_name} (exited ${rc} — re-trigger must never hard-fail)"
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
+
+  local has_warning="no"
+  echo "${output}" | grep -q "::warning::Failed to re-apply" && has_warning="yes"
+
+  if [ "${has_warning}" != "${expect_warning}" ]; then
+    echo "FAIL: ${test_name}"
+    echo "  expected warning: '${expect_warning}', got: '${has_warning}'"
+    echo "  output: ${output}"
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
+
+  echo "PASS: ${test_name}"
+}
+
+# --- Label re-trigger test cases ---
+
+# Both calls succeed → no warning, no failure.
+run_relabel_test "relabel-both-succeed" "none" "no"
+
+# Remove fails (e.g. label wasn't present — first fix run on a PR whose
+# label was never applied) — silent, add still runs and succeeds.
+run_relabel_test "relabel-remove-fails-add-succeeds" "remove" "no"
+
+# Add fails (e.g. API error, label deleted from repo) — warns, does not fail.
+run_relabel_test "relabel-add-fails" "add" "yes"
+
+# Both fail — still just a warning, never a hard failure.
+run_relabel_test "relabel-both-fail" "both" "yes"
+
 # --- Summary ---
 
 echo ""
