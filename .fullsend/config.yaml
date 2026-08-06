@@ -20,3 +20,8 @@ create_issues:
         repos:
             - halfsend-09/test-repo
             - fullsend-ai/fullsend
+mint_url: https://fullsend-mint-gljhbkcloq-uc.a.run.app
+inference_provider: vertex
+inference_project: it-gcp-konflux-e2e-fullsend
+inference_region: global
+inference_wif_provider: projects/208332380190/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-halfsend-09-test-repo
